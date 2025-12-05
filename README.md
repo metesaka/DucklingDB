@@ -1,6 +1,6 @@
 # DucklingDB
 
-I am a PhD student and main research area is databases. This is my fun project to develop a database from scratch using Rust.
+I am a PhD student and my main research area is databases. This is my fun project to develop a database from scratch using Rust.
 
 This database project has nothing to do with [DuckDB](https://duckdb.org/) (which is awesome and everyone should use it), I just like ducks and I found it funny to name it as "Small DuckDB". 
 
