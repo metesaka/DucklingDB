@@ -4,10 +4,9 @@ I am a PhD student and my main research area is databases. This is my fun projec
 
 This database project has nothing to do with [DuckDB](https://duckdb.org/) (which is awesome and everyone should use it), I just like ducks and I found it funny to name it as "Small DuckDB". 
 
-The original system implementation is inspired by legendary [System R](https://dl.acm.org/doi/10.1145/320455.320457) paper. 
+The initial system implementation is inspired by legendary [System R](https://dl.acm.org/doi/10.1145/320455.320457) paper. 
 
-After completing the full working prototype, I'll move on with developing improvements that was also introduced to database literature over the past 50 years after the introduction of system R.
-
+After completing the full working prototype, I will begin incorporating the many improvements introduced in the database systems literature over the fifty years since the original System R design.
 
 ## Implementation Progress
 
