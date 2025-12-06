@@ -1,12 +1,15 @@
 use std::sync::{Arc, Mutex};
 
 use crate::buffer_manager::BufferPoolManager;
-use crate::slotted_page::{SlottedPage, SlotId};
+use crate::slotted_page::{SlotId, SlottedPage};
 
 pub type PageId = u64;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct TupleId { pub page_id: PageId, pub slot_id: SlotId }
+pub struct TupleId {
+    pub page_id: PageId,
+    pub slot_id: SlotId,
+}
 
 pub struct HeapFile {
     buffer_pool_manager: Arc<Mutex<BufferPoolManager>>,
@@ -31,7 +34,8 @@ impl HeapFile {
                 bpm.fetch_page(page_id)?
             };
             let slot_id_opt = {
-                let mut frame_lock: std::sync::MutexGuard<'_, crate::buffer_manager::Frame> = frame.lock().unwrap();
+                let mut frame_lock: std::sync::MutexGuard<'_, crate::buffer_manager::Frame> =
+                    frame.lock().unwrap();
                 let mut sp: SlottedPage = SlottedPage::from_buffer(&mut frame_lock.data);
                 let slot_id = sp.insert(data);
                 if slot_id.is_some() {
@@ -58,7 +62,7 @@ impl HeapFile {
         let slot_id = {
             let mut frame_lock = frame.lock().unwrap();
             let mut sp = SlottedPage::init(&mut frame_lock.data); // <-- init for fresh page
-            let sid = sp.insert(data)?;                            // must succeed on empty page
+            let sid = sp.insert(data)?; // must succeed on empty page
             frame_lock.is_dirty = true;
             sid
         };
@@ -68,22 +72,25 @@ impl HeapFile {
         }
         self.pages.push(new_page_id);
 
-        Some(TupleId { page_id: new_page_id, slot_id })
-        }
+        Some(TupleId {
+            page_id: new_page_id,
+            slot_id,
+        })
+    }
 
     // Read a tuple given its TupleId
     pub fn read_tuple(&mut self, tid: TupleId) -> Option<Vec<u8>> {
-
         let frame = {
             let mut bpm = self.buffer_pool_manager.lock().unwrap();
             bpm.fetch_page(tid.page_id)?
         };
         let data_opt: Option<Vec<u8>> = {
-            let mut frame_lock: std::sync::MutexGuard<'_, crate::buffer_manager::Frame> = frame.lock().unwrap();
+            let mut frame_lock: std::sync::MutexGuard<'_, crate::buffer_manager::Frame> =
+                frame.lock().unwrap();
             let sp = SlottedPage::from_buffer(&mut frame_lock.data);
             sp.read(tid.slot_id).map(|data| data.to_vec())
         };
-        {   
+        {
             let mut bpm = self.buffer_pool_manager.lock().unwrap();
             let _ = bpm.unpin_page(tid.page_id, false);
         }
