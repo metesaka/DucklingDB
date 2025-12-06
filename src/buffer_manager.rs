@@ -209,3 +209,18 @@ impl ClockReplacer {
         self.frames[frame_id] = Some(frame_id);
     }
 }
+
+#[test]
+fn clock_replacer_test() {
+    let mut clock_replacer = ClockReplacer::new(3);
+    clock_replacer.unpin(0);
+    clock_replacer.unpin(1);
+    clock_replacer.unpin(2);
+    assert_eq!(clock_replacer.victim(), Some(0));
+    clock_replacer.pin(0);
+    assert_eq!(clock_replacer.victim(), Some(1));
+    clock_replacer.pin(1);
+    assert_eq!(clock_replacer.victim(), Some(2));
+    clock_replacer.pin(2);
+    assert_eq!(clock_replacer.victim(), None);
+}

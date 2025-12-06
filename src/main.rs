@@ -2,27 +2,12 @@ mod buffer_manager;
 mod disk_manager;
 mod heap_file;
 mod slotted_page;
-use crate::buffer_manager::{BufferPoolManager, ClockReplacer};
+use crate::buffer_manager::BufferPoolManager;
 use crate::disk_manager::{DiskManager, Page, PAGE_SIZE};
 use crate::heap_file::HeapFile;
 use crate::slotted_page::{SlotId, SlottedPage};
 
 // The DiskManager is responsible for reading and writing pages to the database file.
-
-pub fn clock_replacer_test() {
-    let mut clock_replacer = ClockReplacer::new(3);
-    clock_replacer.unpin(0);
-    clock_replacer.unpin(1);
-    clock_replacer.unpin(2);
-    assert_eq!(clock_replacer.victim(), Some(0));
-    clock_replacer.pin(0);
-    assert_eq!(clock_replacer.victim(), Some(1));
-    clock_replacer.pin(1);
-    assert_eq!(clock_replacer.victim(), Some(2));
-    clock_replacer.pin(2);
-    assert_eq!(clock_replacer.victim(), None);
-    println!("ClockReplacer tests passed.");
-}
 
 fn main() {
     let mut disk_manager = DiskManager::new("test.db");
@@ -33,7 +18,6 @@ fn main() {
     disk_manager.read_page(0, &mut page).unwrap();
     println!("Read page: {:?}", &page[..16]); // Print first 16 bytes for brevity
 
-    clock_replacer_test();
     // BufferPoolManager test
     let mut buffer_pool_manager = BufferPoolManager::new(2, disk_manager);
     let frame1 = buffer_pool_manager.fetch_page(0).unwrap();
