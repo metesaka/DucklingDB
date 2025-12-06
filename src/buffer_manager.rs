@@ -1,7 +1,6 @@
+use crate::disk_manager::{DiskManager, Page, PAGE_SIZE};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use crate::disk_manager::{DiskManager, Page, PAGE_SIZE};
-
 
 // A Frame holds one page and its metadata.
 pub struct Frame {
@@ -39,7 +38,7 @@ impl BufferPoolManager {
                 data: [0; PAGE_SIZE],
                 is_dirty: false,
                 pin_count: 0,
-        })));
+            })));
         }
         BufferPoolManager {
             buffer_pool,
@@ -60,7 +59,11 @@ impl BufferPoolManager {
             let victim_lock: std::sync::MutexGuard<'_, Frame> = victim_frame.lock().unwrap();
             if victim_lock.is_dirty {
                 // Write back to disk if dirty
-                self.disk_manager.lock().unwrap().write_page(victim_lock.page_id, &victim_lock.data).unwrap();
+                self.disk_manager
+                    .lock()
+                    .unwrap()
+                    .write_page(victim_lock.page_id, &victim_lock.data)
+                    .unwrap();
             }
             self.page_table.remove(&victim_lock.page_id);
             victim_frame_id
@@ -98,7 +101,7 @@ impl BufferPoolManager {
                 }
                 self.replacer.pin(frame_id);
                 Some(frame)
-            },
+            }
             None => {
                 // Not found
                 let frame_id = if let Some(free_frame_id) = self.free_list.pop() {
@@ -106,10 +109,15 @@ impl BufferPoolManager {
                 } else if let Some(victim_frame_id) = self.replacer.victim() {
                     // Evict the victim frame
                     let victim_frame: Arc<Mutex<Frame>> = self.buffer_pool[victim_frame_id].clone();
-                    let victim_lock: std::sync::MutexGuard<'_, Frame> = victim_frame.lock().unwrap();
+                    let victim_lock: std::sync::MutexGuard<'_, Frame> =
+                        victim_frame.lock().unwrap();
                     if victim_lock.is_dirty {
                         // Write back to disk if dirty
-                        self.disk_manager.lock().unwrap().write_page(victim_lock.page_id, &victim_lock.data).unwrap();
+                        self.disk_manager
+                            .lock()
+                            .unwrap()
+                            .write_page(victim_lock.page_id, &victim_lock.data)
+                            .unwrap();
                     }
                     self.page_table.remove(&victim_lock.page_id);
                     victim_frame_id
@@ -124,16 +132,20 @@ impl BufferPoolManager {
                     frame_lock.page_id = page_id;
                     frame_lock.is_dirty = false;
                     frame_lock.pin_count = 1;
-                    self.disk_manager.lock().unwrap().read_page(page_id, &mut frame_lock.data).unwrap();
+                    self.disk_manager
+                        .lock()
+                        .unwrap()
+                        .read_page(page_id, &mut frame_lock.data)
+                        .unwrap();
                 }
                 self.page_table.insert(page_id, frame_id);
                 self.replacer.pin(frame_id);
-                Some(frame) 
+                Some(frame)
             }
         }
     }
 
-    // Unpin a page in the buffer pool. 
+    // Unpin a page in the buffer pool.
     // Unpin means that the page is no longer needed by the caller.
     pub fn unpin_page(&mut self, page_id: u64, is_dirty: bool) -> bool {
         match self.page_table.get(&page_id) {
@@ -152,13 +164,11 @@ impl BufferPoolManager {
                 } else {
                     false
                 }
-            },
+            }
             None => false,
         }
     }
 }
-                    
-            
 
 pub struct ClockReplacer {
     frames: Vec<Option<usize>>, // Holds the frame_ids of frames in the buffer pool
@@ -175,7 +185,8 @@ impl ClockReplacer {
 
     // Finds a frame to evict.
     pub fn victim(&mut self) -> Option<usize> {
-        for _ in 0..(2 * self.frames.len()) { // Loop at most twice to find a victim
+        for _ in 0..(2 * self.frames.len()) {
+            // Loop at most twice to find a victim
             let frame_id = self.clock_hand;
             self.clock_hand = (self.clock_hand + 1) % self.frames.len();
 
@@ -192,7 +203,7 @@ impl ClockReplacer {
     pub fn pin(&mut self, frame_id: usize) {
         self.frames[frame_id] = None;
     }
-    
+
     // Remove a frame from the replacer's tracking.
     pub fn unpin(&mut self, frame_id: usize) {
         self.frames[frame_id] = Some(frame_id);

@@ -1,11 +1,11 @@
-mod disk_manager;
 mod buffer_manager;
-mod slotted_page;
+mod disk_manager;
 mod heap_file;
-use crate::disk_manager::{DiskManager, Page, PAGE_SIZE};
+mod slotted_page;
 use crate::buffer_manager::{BufferPoolManager, ClockReplacer};
-use crate::slotted_page::{SlottedPage, SlotId}; 
+use crate::disk_manager::{DiskManager, Page, PAGE_SIZE};
 use crate::heap_file::HeapFile;
+use crate::slotted_page::{SlotId, SlottedPage};
 
 // The DiskManager is responsible for reading and writing pages to the database file.
 
@@ -24,7 +24,6 @@ pub fn clock_replacer_test() {
     println!("ClockReplacer tests passed.");
 }
 
-
 fn main() {
     let mut disk_manager = DiskManager::new("test.db");
     let mut page: Page = [2; PAGE_SIZE];
@@ -40,12 +39,12 @@ fn main() {
     let frame1 = buffer_pool_manager.fetch_page(0).unwrap();
     {
         let frame1_lock = frame1.lock().unwrap();
-        println!("Fetched page 0: {:?}", &frame1_lock.data[..16]); // Print first 16 bytes for brevity  
+        println!("Fetched page 0: {:?}", &frame1_lock.data[..16]); // Print first 16 bytes for brevity
     }
     let frame2 = buffer_pool_manager.fetch_page(1).unwrap();
     {
         let frame2_lock = frame2.lock().unwrap();
-        println!("Fetched page 1: {:?}", &frame2_lock.data[..16]); // Print first 16 bytes for brevity  
+        println!("Fetched page 1: {:?}", &frame2_lock.data[..16]); // Print first 16 bytes for brevity
     }
 
     let mut page: Page = [0u8; PAGE_SIZE];
@@ -68,9 +67,7 @@ fn main() {
     let t3 = b"another tuple";
     let id3: SlotId = sp.insert(t3).unwrap();
 
-    sp.delete(id2)  ;
-
-    
+    sp.delete(id2);
 
     let a = sp.insert(b"short").unwrap();
     let updated = sp.update(a, b"this is much longer than short");
@@ -82,12 +79,15 @@ fn main() {
     } else {
         println!("Failed to update slot {:?}.", a);
     }
-    for (slot,tuple) in sp.iter() {
-        println!("Slot ID:{:?}- tuple: {:?}",slot, std::str::from_utf8(tuple).unwrap());
+    for (slot, tuple) in sp.iter() {
+        println!(
+            "Slot ID:{:?}- tuple: {:?}",
+            slot,
+            std::str::from_utf8(tuple).unwrap()
+        );
     }
 
-
-        let dm = DiskManager::new("test.db");
+    let dm = DiskManager::new("test.db");
     let bpm = BufferPoolManager::new(8, dm);
     let bpm = std::sync::Arc::new(std::sync::Mutex::new(bpm));
 
@@ -102,7 +102,4 @@ fn main() {
 
     let v1 = hf.read_tuple(r1).unwrap();
     println!("get(r1) = {}", std::str::from_utf8(&v1).unwrap());
-
-
-    
 }
