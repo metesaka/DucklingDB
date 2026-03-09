@@ -18,7 +18,10 @@ impl DiskManager {
             .create(true)
             .open(file_path)
             .expect("Failed to open database file");
-        DiskManager { db_file, num_pages: 0 }
+        DiskManager {
+            db_file,
+            num_pages: 0,
+        }
     }
 
     // Read a page from the database file.
@@ -27,10 +30,8 @@ impl DiskManager {
         self.db_file
             .seek(SeekFrom::Start(offset))
             .expect("Failed to seek to page");
-        self.db_file
-            .read_exact(page)
-            .expect("Failed to read page");
-    Ok(())
+        self.db_file.read_exact(page).expect("Failed to read page");
+        Ok(())
     }
 
     // Write a page to the database file.
@@ -39,9 +40,7 @@ impl DiskManager {
         self.db_file
             .seek(SeekFrom::Start(offset))
             .expect("Failed to seek to page");
-        self.db_file
-            .write_all(page)
-            .expect("Failed to write page");
+        self.db_file.write_all(page).expect("Failed to write page");
         self.db_file.flush()?;
         self.num_pages = self.num_pages.max(page_id + 1);
         Ok(())
